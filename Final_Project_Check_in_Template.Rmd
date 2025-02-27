@@ -1,0 +1,162 @@
+---
+title: "Final Project TA Check-in Template"
+author: "Kacie Ring, edited by Kayla Kauffman"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+---
+
+```{r setup, include=TRUE, message=FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# packages
+library(tidyverse)
+library(car)
+```
+
+# Part 1: Select and understand your data  
+
+## Part 1 Questions  
+
+### 1. Upload a csv file of the dataset you are going to use to the Final Project Check-in portal on Canvas. Also load the dataset into R in the code chunk below to use in your analysis.
+
+```{r}
+ca_pollution <- read.csv("dataset_65.csv")
+```
+
+### 2. Briefly describe this dataset in 1-2 sentences. Who is the author/creator of this dataset? How, when and why were these data collected? 
+
+**This data obtained from CA OEHHA collected data recently in 2024, and this data was collected to identify california populations that are being the most effected by areas of pollution**
+
+### 3. What is your outcome (y) of interest in this dataset? This should be your numeric, (ideally) normally distributed y variable.  
+
+**Annual average rate of respiratory-related hospital admissions.**
+
+### 4. What are your inputs (x) of interest in this dataset?  
+*(list 1 numeric and 2 categorical inputs)*  
+
+
+**Numeric input: Average annual PM2.5 concentration. Categorical input 1: Disadvantaged Community (yes/no). Categorical input 2: Asian American**
+
+
+-------------------------------------------------------------------------------------------------------
+
+# Part 2: Explore and visualize data  
+This part is highly recommended so that you are sure your dataset is suitable for this assignment. It will not be graded.
+
+## Data Cleaning Example Code (highly recommended)  
+
+Selecting or removing columns to clean your dataset  
+
+Note: a lot of your datasets will have data that you won't use, feel free to tidy up your data and only include variables/columns of interest
+
+```{r}
+clean_df <- ca_pollution %>%
+  select(
+    pm2_5,
+    sb_535_disadvantaged_community,
+    asian_american_percent,
+    low_birth_weight,
+    total_population
+  )
+```
+
+Removing NAs  
+
+```{r}
+clean_df <- clean_df %>%
+  filter(
+    !is.na(pm2_5),
+    !is.na(sb_535_disadvantaged_community),
+    !is.na(asian_american_percent),
+    !is.na(low_birth_weight)
+  )
+```
+
+Selecting observations with a *biological reason*  
+For example, if you have a dataset looking at frog weight among species (red-eyed treefrog, glass frog, and western toads) but your weight is not normally distributed (even after logging) you can choose just to include the tree frogs and remove toads from your analysis because the toads are the least related phylogenetically, or because they live in different habitats. 
+
+```{r}
+clean_df <- clean_df %>%
+  filter(sb_535_disadvantaged_community != "No Data")
+```
+
+## Part 2 Questions  
+
+This part is highly recommended so that you are sure your dataset is suitable for this assignment. It will not be graded.
+
+### 1. Is your untransformed y variable normally distributed? Show a histogram, qqPlot, and shapiro wilks test.  
+
+
+**The untransformed y data is normal.**
+
+
+```{r}
+ggplot(clean_df, aes(x = low_birth_weight)) +
+  geom_histogram(bins = 30, color = "black", fill = "steelblue") +
+  labs(
+    title = "Histogram of Low Birth Weight (Untransformed)",
+    x = "Low Birth Weight (%)",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+ggplot(clean_df, aes(sample = low_birth_weight)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(
+    title = "Q-Q Plot of Low Birth Weight (Untransformed)"
+  ) +
+  theme_minimal()
+
+shapiro.test(clean_df$low_birth_weight)
+```
+
+**No Transformations Needed**
+
+### 3. Plot  your y (numeric) ~ x (numeric) relationship.   
+**Use your transformed y-variable data here if you chose to use it in step 2**  
+
+```{r}
+ggplot(clean_df, aes(x = pm2_5, y = low_birth_weight)) +
+  geom_point(color = "darkblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(
+    title = "Log(Low Birth Weight) vs. PM2.5",
+    x = "PM2.5 (µg/m³)",
+    y = "Log(Low Birth Weight %)"
+  ) +
+  theme_minimal()
+```
+
+### 4A. Plot your first y (numeric) ~ x (categorical) relationship.  
+**Use your transformed y-variable data here if you chose to use it in step 2**  
+
+```{r}
+ggplot(clean_df, aes(x = sb_535_disadvantaged_community, y = low_birth_weight)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(
+    title = "Log(Low Birth Weight) by Disadvantaged Community",
+    x = "Disadvantaged Community (Yes/No)",
+    y = "Log(Low Birth Weight %)"
+  ) +
+  theme_minimal()
+```
+
+
+### 4B. Plot your second y (numeric) ~ x (categorical) relationship.  
+**Use your transformed y-variable data here if you chose to use it in step 2**  
+
+```{r}
+ggplot(clean_df, aes(x = asian_american_percent, y = low_birth_weight)) +
+  geom_point(color = "purple") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(
+    title = "Log(Low Birth Weight) vs. Asian American Percent",
+    x = "Asian American Percent of Population",
+    y = "Log(Low Birth Weight %)"
+  ) +
+  theme_minimal()
+```
